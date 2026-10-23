@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* The page beneath the app: the colour the Layout's backdrop starts
+   and ends with, so scrolling past the top or the bottom of a page
+   never shows the browser's white — and the page's own scrollbar
+   dark to match */
+@layer base {
+  html {
+    background-color: #06070f;
+    color-scheme: dark;
+  }
+}
