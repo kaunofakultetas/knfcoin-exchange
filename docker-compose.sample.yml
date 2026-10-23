@@ -1,0 +1,204 @@
+services:
+
+  # ------------------------------------------------------------
+  #              Incoming/outgoing traffic endpoints
+  # ------------------------------------------------------------
+  knfexchange-endpoint:
+    container_name: knfexchange-endpoint
+    image: caddy:2.11-alpine
+    user: 1000:1000
+    read_only: true
+    volumes:
+      - ./endpoint/Caddyfile:/etc/caddy/Caddyfile:ro
+    environment:
+      ############################ SISTEMOS PASSWORD #######################
+      APP_PASSWORD_1: GUI_PASSWORD_HERE
+      ######################################################################
+    ports:
+      - 80:80
+    restart: unless-stopped
+
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+  # ------------------------------------------------------------
+  #                     Students gate
+  # ------------------------------------------------------------
+  knfexchange-login:
+    container_name: knfexchange-login
+    image: vuknf/simple-login-page:20260924
+    environment:
+      VITE_SYSTEM_NAME: "VU KNF Coin<br/>Bandymų Platforma"
+    restart: unless-stopped
+
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+  # ------------------------------------------------------------
+  #                   Crypto exchange services
+  # ------------------------------------------------------------
+  knfexchange-vite:
+    container_name: knfexchange-vite
+
+    # Docker hub
+    image: vuknf/knfexchange-vite
+
+    # # Self-built
+    # image: knfexchange-vite
+    # build:
+    #   context: ./vite
+    #   # dockerfile: Dockerfile                                                         # Prod
+    #   dockerfile: Dockerfile.dev                                                     # Dev
+
+    user: 1000:1000
+    read_only: true
+    # tmpfs:                                                                           # Dev
+    #   - /home/node/.npm:uid=1000,gid=1000                                            # Dev
+    # volumes:                                                                         # Dev
+    #   - ./vite/app:/app                                                              # Dev
+    restart: unless-stopped
+
+
+  knfexchange-backend:
+    container_name: knfexchange-backend
+
+    # Docker hub
+    image: vuknf/knfexchange-backend
+
+    # # Self-built
+    # image: knfexchange-backend
+    # build: ./backend
+
+    user: 1000:1000
+    read_only: true
+    environment:
+      # - APP_DEBUG=True                                                               # Dev
+      - EXCHANGE_PRIVATE_KEY=${EXCHANGE_PRIVATE_KEY}
+    tmpfs:
+      - /.bitcoinlib:uid=1000,gid=1000
+    volumes:
+      # Configuration
+      - /etc/localtime:/etc/localtime:ro
+      - ./_CONFIG:/config:ro
+
+      # Backend Database
+      - ./_DATA/exchange:/data
+      
+      # Backend Source Code
+      # - ./backend:/app                                                               # Dev
+    restart: unless-stopped
+
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+  # ------------------------------------------------------------
+  #                   Block explorer services
+  # ------------------------------------------------------------
+  knfexchange-explorer:
+    container_name: knfexchange-explorer
+    image: vuknf/knfexchange-explorer
+    environment:
+      BTCEXP_COIN: KNF
+      BTCEXP_HOST: 0.0.0.0
+      BTCEXP_RPC_CONCURRENCY: 1000
+      BTCEXP_BASEURL: /explorer/
+
+      BTCEXP_BITCOIND_URI: bitcoin://admin:admin@knfexchange-fullnode:19332?timeout=10000
+      BTCEXP_ADDRESS_API: electrum
+      BTCEXP_ELECTRUM_SERVERS: ssl://158.129.172.247:49002
+      BTCEXP_SLOW_DEVICE_MODE: false
+    restart: unless-stopped
+
+
+  knfexchange-fullnode:
+    container_name: knfexchange-fullnode
+    image: vuknf/knfcoin-fullnode
+    volumes:
+      - ./_DATA/fullnode:/root/.litecoin
+    command:
+      [
+        "knfcoind",
+        "-server=1",
+        "-txindex=1",
+        "-rpcuser=admin",
+        "-rpcpassword=admin",
+        "-rpcallowip=172.0.0.0/8",
+        "-rpcport=19332",
+        "-rpcbind=0.0.0.0",
+        "-dbcache=512",
+        "-checkblocks=6",
+        "-dnsseed=0",
+        "-addnode=158.129.172.247:49333"
+      ]
+    restart: unless-stopped
+
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+  # ------------------------------------------------------------
+  #              Additional administration services 
+  # ------------------------------------------------------------
+  knfexchange-dbgate:
+    container_name: knfexchange-dbgate
+    image: dbgate/dbgate:7.3.2
+    user: root
+    read_only: true
+    environment:
+      WEB_ROOT: /dbgate
+
+      LOGINS: admin
+      LOGIN_PASSWORD_admin: ${DBGATE_PASSWORD}
+
+      CONNECTIONS: con1
+      LABEL_con1: KNF Exchange Playground
+      FILE_con1: /root/db/exchange.db
+      ENGINE_con1: sqlite@dbgate-plugin-sqlite
+
+    volumes:
+      - ./_DATA/exchange:/root/db
+    restart: unless-stopped
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------

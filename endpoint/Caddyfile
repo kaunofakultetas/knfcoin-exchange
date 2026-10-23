@@ -1,0 +1,106 @@
+:80 {
+    route {
+
+        # ------------------------------------------------------------
+        #                         Security headers
+        # ------------------------------------------------------------
+        # SECURITY: Block other applications from accessing the application at the Caddy level
+        @foreign expression `{http.request.header.Origin} != "" && !{http.request.header.Origin}.endsWith("://" + {http.request.host})`
+        respond @foreign 403
+
+        # SECURITY: Restricts the scripts in the browser from communicating with external sources
+        header Content-Security-Policy "
+            default-src         'self';
+            script-src          'self' 'unsafe-inline' 'unsafe-eval';
+            style-src           'self' 'unsafe-inline';
+            img-src             'self' data:;
+            font-src            'self' data:;
+            connect-src         'self';
+            frame-ancestors     'self';
+            frame-src           'self';
+            child-src           'self';
+            form-action         'self';
+            base-uri            'self';
+            worker-src          'self';
+            upgrade-insecure-requests;
+        "
+
+        # SECURITY: Force HTTPS for this domain
+        header Strict-Transport-Security "max-age=31536000"
+        # ------------------------------------------------------------
+        # ------------------------------------------------------------
+        # ------------------------------------------------------------
+
+
+
+
+
+
+
+        header {
+            Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+            Pragma "no-cache"
+        }
+
+
+
+
+        ############ APP PASSWORD 1 ############
+        @hasCookie1 header_regexp cookieCheck Cookie "(;|^|\ )app-password={$APP_PASSWORD_1}(;|$|\ )"
+        handle @hasCookie1 {
+
+
+            # BACKEND API
+            handle /api/* {
+                reverse_proxy knfexchange-backend:8000 {
+                    header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+                }
+            }
+
+
+            # DBGATE
+            redir /dbgate /dbgate/
+            handle /dbgate/* {
+                reverse_proxy knfexchange-dbgate:3000 {
+                    header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+                }
+            }
+
+
+            # Blockchain Explorer
+            redir /explorer /explorer/
+            handle /explorer/* {
+                reverse_proxy knfexchange-explorer:3002 {
+                    header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+                }
+            }
+
+
+            # VITE
+            handle /* {
+                reverse_proxy knfexchange-vite:80 {
+                    header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+                }
+            }
+
+        }
+        ########################################
+
+
+
+
+
+
+        ######## UNAUTHENTICATED ROUTES ########
+        handle /* {
+            header {
+                Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+                Pragma "no-cache"
+            }
+            reverse_proxy knfexchange-login:80
+        }
+        ########################################
+
+
+    }
+}

@@ -1,0 +1,16 @@
+# Faculty's docker-compose
+/docker-compose.yml
+
+# Local  data
+/_DATA
+/.env
+.claude
+/_DEFECTS
+
+
+
+#### Common ignored files ###
+# Byte-compiled / optimized python files
+__pycache__/
+*.py[cod]
+*$py.class
