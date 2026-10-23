@@ -129,7 +129,7 @@ services:
   # ------------------------------------------------------------
   knfexchange-explorer:
     container_name: knfexchange-explorer
-    image: vuknf/knfexchange-explorer
+    image: vuknf/knfcoin-explorer
     environment:
       BTCEXP_COIN: KNF
       BTCEXP_HOST: 0.0.0.0
