@@ -130,16 +130,21 @@ services:
   knfexchange-explorer:
     container_name: knfexchange-explorer
     image: vuknf/knfcoin-explorer
+    user: 1000:1000
+    read_only: true
     environment:
       BTCEXP_COIN: KNF
       BTCEXP_HOST: 0.0.0.0
       BTCEXP_RPC_CONCURRENCY: 1000
       BTCEXP_BASEURL: /explorer/
+      BTCEXP_FILESYSTEM_CACHE_DIR: /tmp/cache
 
       BTCEXP_BITCOIND_URI: bitcoin://admin:admin@knfexchange-fullnode:19332?timeout=10000
       BTCEXP_ADDRESS_API: electrum
       BTCEXP_ELECTRUM_SERVERS: ssl://158.129.172.247:49002
       BTCEXP_SLOW_DEVICE_MODE: false
+    tmpfs:
+      - /tmp
     restart: unless-stopped
 
 
