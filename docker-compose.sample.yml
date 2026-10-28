@@ -135,7 +135,7 @@ services:
     environment:
       BTCEXP_COIN: KNF
       BTCEXP_HOST: 0.0.0.0
-      BTCEXP_RPC_CONCURRENCY: 1000
+      BTCEXP_RPC_CONCURRENCY: 10
       BTCEXP_BASEURL: /explorer/
       BTCEXP_FILESYSTEM_CACHE_DIR: /tmp/cache
 
