@@ -1,0 +1,41 @@
+{
+    layer4 {
+
+
+
+        # ------------------------------------------------------------
+        #                      ElectrumX Servers
+        # ------------------------------------------------------------
+        # ElectrumX servers — one host, one port per network. The
+        # dummy SNI name encodes the real destination (ip--port);
+        # the client always connects here on :443.
+        :443 {
+            @exit_electrumx_knf tls sni ip-158-129-172-247--49002
+            route @exit_electrumx_knf {
+                proxy 158.129.172.247:49002
+            }
+
+            @exit_electrumx_ltc4 tls sni ip-158-129-172-247--50002
+            route @exit_electrumx_ltc4 {
+                proxy 158.129.172.247:50002
+            }
+        }
+
+
+
+
+
+        # ------------------------------------------------------------
+        #                      Fullnode Servers
+        # ------------------------------------------------------------
+        :49333 {
+            route {
+                proxy 158.129.172.247:49333
+            }
+        }
+
+
+
+
+    }
+}

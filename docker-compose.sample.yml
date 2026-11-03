@@ -16,16 +16,27 @@ services:
       ######################################################################
     ports:
       - 80:80
+    networks:
+      - isolated
+      - external
     restart: unless-stopped
 
+
+  knfexchange-exit:
+    container_name: knfexchange-exit
+    image: vuknf/caddy-l4:2.11
+    user: 1000:1000
+    read_only: true
+    volumes:
+      - ./exit/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      external: {}
+      isolated:
+        ipv4_address: 172.18.123.30
+    restart: unless-stopped
   # ------------------------------------------------------------
   # ------------------------------------------------------------
   # ------------------------------------------------------------
-
-
-
-
-
 
 
 
@@ -40,11 +51,46 @@ services:
     image: vuknf/simple-login-page:20260924
     environment:
       VITE_SYSTEM_NAME: "VU KNF Coin<br/>Bandymų Platforma"
+    networks:
+      - isolated
     restart: unless-stopped
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
 
   # ------------------------------------------------------------
+  #                          DNS Server
+  # ------------------------------------------------------------
+  knfexchange-dns:
+    container_name: knfexchange-dns
+    image: dockurr/dnsmasq:2.92
+    user: 1000:1000
+    read_only: true
+    entrypoint: ["dnsmasq", "--no-daemon"]
+    command:
+      - --no-resolv
+      - --no-hosts
+      - --local=/#/
+      - --address=/#/172.18.123.30
+    networks:
+      isolated:
+        ipv4_address: 172.18.123.31
+    restart: unless-stopped
   # ------------------------------------------------------------
   # ------------------------------------------------------------
+  # ------------------------------------------------------------
+
+
 
 
 
@@ -63,7 +109,7 @@ services:
     container_name: knfexchange-vite
 
     # Docker hub
-    image: vuknf/knfexchange-vite
+    image: vuknf/knfexchange-vite:latest
 
     # # Self-built
     # image: knfexchange-vite
@@ -78,6 +124,9 @@ services:
     #   - /home/node/.npm:uid=1000,gid=1000                                            # Dev
     # volumes:                                                                         # Dev
     #   - ./vite/app:/app                                                              # Dev
+    networks:
+      - isolated
+      # - external                                                                     # Dev
     restart: unless-stopped
 
 
@@ -85,7 +134,7 @@ services:
     container_name: knfexchange-backend
 
     # Docker hub
-    image: vuknf/knfexchange-backend
+    image: vuknf/knfexchange-backend:latest
 
     # # Self-built
     # image: knfexchange-backend
@@ -108,8 +157,12 @@ services:
       
       # Backend Source Code
       # - ./backend:/app                                                               # Dev
+    dns:
+      - 172.18.123.31
+    networks:
+      - isolated
+      # - external                                                                     # Dev
     restart: unless-stopped
-
   # ------------------------------------------------------------
   # ------------------------------------------------------------
   # ------------------------------------------------------------
@@ -129,7 +182,7 @@ services:
   # ------------------------------------------------------------
   knfexchange-explorer:
     container_name: knfexchange-explorer
-    image: vuknf/knfcoin-explorer
+    image: vuknf/knfcoin-explorer:20261028
     user: 1000:1000
     read_only: true
     environment:
@@ -141,16 +194,21 @@ services:
 
       BTCEXP_BITCOIND_URI: bitcoin://admin:admin@knfexchange-fullnode:19332?timeout=10000
       BTCEXP_ADDRESS_API: electrum
-      BTCEXP_ELECTRUM_SERVERS: ssl://158.129.172.247:49002
+      BTCEXP_ELECTRUM_SERVERS: ssl://ip-158-129-172-247--49002:443
       BTCEXP_SLOW_DEVICE_MODE: false
     tmpfs:
       - /tmp
+    dns:
+      - 172.18.123.31
+    networks:
+      - isolated
+      # - external                                                                     # Dev
     restart: unless-stopped
 
 
   knfexchange-fullnode:
     container_name: knfexchange-fullnode
-    image: vuknf/knfcoin-fullnode
+    image: vuknf/knfcoin-fullnode:20260713
     volumes:
       - ./_DATA/fullnode:/root/.litecoin
     command:
@@ -166,10 +224,15 @@ services:
         "-dbcache=512",
         "-checkblocks=6",
         "-dnsseed=0",
-        "-addnode=158.129.172.247:49333"
+        "-addnode=ip-158-129-172-247--49333:49333"
       ]
+    dns:
+      - 172.18.123.31
+    networks:
+      - isolated
+      # - external                                                                     # Dev
+    stop_grace_period: 15m
     restart: unless-stopped
-
   # ------------------------------------------------------------
   # ------------------------------------------------------------
   # ------------------------------------------------------------
@@ -203,7 +266,28 @@ services:
 
     volumes:
       - ./_DATA/exchange:/root/db
+    networks:
+      - isolated
     restart: unless-stopped
   # ------------------------------------------------------------
   # ------------------------------------------------------------
   # ------------------------------------------------------------
+
+
+
+
+
+
+
+networks:
+  external:
+    name: external
+    external: true
+  isolated:
+    name: knfexchange-isolated
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.18.123.0/24
+          gateway: 172.18.123.1
