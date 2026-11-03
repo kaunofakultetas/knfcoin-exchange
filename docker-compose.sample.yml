@@ -194,7 +194,7 @@ services:
 
       BTCEXP_BITCOIND_URI: bitcoin://admin:admin@knfexchange-fullnode:19332?timeout=10000
       BTCEXP_ADDRESS_API: electrum
-      BTCEXP_ELECTRUM_SERVERS: ssl://ip-158-129-172-247--49002:443
+      BTCEXP_ELECTRUM_SERVERS: ssl://ip-158-129-172-247--49002:49002
       BTCEXP_SLOW_DEVICE_MODE: false
     tmpfs:
       - /tmp

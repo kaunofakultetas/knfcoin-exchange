@@ -66,7 +66,7 @@ CHAIN_CONFIGS = {
             'coin': 'knfcoin',
             'network': 'mainnet',
             'confirm_target': 2,
-            'electrum_server': 'ip-158-129-172-247--49002:443',
+            'electrum_server': 'ip-158-129-172-247--49002:49002',
         },
         'explorer': {
             # The KNF explorer this stack serves itself, behind the same endpoint
@@ -80,7 +80,7 @@ CHAIN_CONFIGS = {
             'coin': 'litecoin',
             'network': 'testnet',
             'confirm_target': 2,
-            'electrum_server': 'ip-158-129-172-247--50002:443',
+            'electrum_server': 'ip-158-129-172-247--50002:50002',
         },
         'explorer': {
             'block_explorer': 'https://litecoinspace.org/testnet',
